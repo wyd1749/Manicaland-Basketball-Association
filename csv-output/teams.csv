@@ -1,0 +1,14 @@
+"id","name","city","abbreviation","color","wins","losses","league","coach","captain","chairperson","founded","arena","logo"
+"1","Mutare Rangers","Mutare","MRB","#E86833",18,4,"mutare","dilfer","Tinashe Mukwende","John Mugani",2015,"Sakubva community court","/images/teams/team-1777899201396-e5a14637.jpg"
+"2","Sophists","Mutare","SPB","#DC2626",15,6,"mutare","Simba Chikore","Simbarashe Dube","Mary Chironga",2016,"Dangamvura community court",
+"3","Mercenaries","Mutare","MRC","#2563EB",14,8,"major","Kudakwashe Ndlovu","Brighton Marondera","David Chipinge",2014,"Rusape Recreation Centre",
+"4","Hoopers","Mutare","HOP","#7C3AED",12,10,"mutare","Farai Mupfumira","Mufudzi Katsande","Grace Mujuru",2017,"Chikanga sports complex",
+"5","Sakubva Hurricanes","Mutare","SKH","#059669",10,12,"major","Blessing Tsvara","Wellington Sithole","Peter Magaya",2018,"Mutare Boys High",
+"6","Villa Stars","Mutare","VSB","#D97706",8,14,"major","Tatenda Gwaze","Gift Muzambi","Annette Mutsa",2019,"Dangamvura Community Court",
+"7","Dangamvura Knights","Mutare","DKN","#6B7280",6,16,"major","Tendai Marufu","Munyaradzi Hove","Charles Dangamvura",2020,"Dangamvura community courts",
+"8","Mutare Academy","Mutare","MTA","#0891B2",4,18,"mutare","Andrew Mahachi","Last Jongwe","Sarah Mutare",2021,"Mutare Girls High",
+"w1","Mutare Queens","Mutare","MQN","#EC4899",12,2,"MWL","Miriam Moyo","Betty Mutare","Miriam Chikore",2019,"Sakubva Community Court",
+"w2","Chipinge Flames","Chipinge","CFL","#F59E0B",10,4,"MWL","Precious Chakonda","Precious Chipinge","John Chipinge",2020,"Chipinge Sports Hall",
+"w3","Nyanga Stars","Nyanga","NYS","#8B5CF6",8,6,"MWL","Faith Mutizwa","Faith Nyanga","Robert Nyanga",2021,"Nyanga Sports Complex",
+"w4"," Rusape Rising","Rusape","RRR","#10B981",6,8,"MWL","Gladys Muzhwi","Gladys Rusape","Michael Rusape",2022,"Rusape Recreation Centre",
+"w5","Dangamvura Lady Knights","Mutare","DLK","#6366F1",4,10,"MWL","Esther Zinyemba","Esther Dangamvura","Daniel Dangamvura",2023,"Dangamvura Community Court",
