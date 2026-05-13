@@ -8,9 +8,11 @@ export function SiteFooter() {
           <div>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-                <span className="font-sans text-lg font-bold text-primary-foreground">
-                  M
-                </span>
+                <img
+                  src="/logo13.png"
+                  alt="MBA Logo"
+                  className="h-7 w-7 object-contain"
+                />
               </div>
               <div>
                 <p className="font-sans text-sm font-bold uppercase tracking-wider text-foreground">

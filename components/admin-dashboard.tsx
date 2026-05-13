@@ -241,9 +241,11 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         <div className="flex items-center justify-between border-b border-border px-4 py-4 lg:px-6">
           <Link href="/" className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <span className="font-sans text-sm font-bold text-primary-foreground">
-                M
-              </span>
+              <img
+                src="/logo13.png"
+                alt="MBA Logo"
+                className="h-6 w-6 object-contain"
+              />
             </div>
             <span className="font-sans text-sm font-bold uppercase tracking-wider text-foreground">
               MBA Admin

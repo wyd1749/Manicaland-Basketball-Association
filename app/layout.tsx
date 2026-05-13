@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/logo13.PNG",
+        url: "/logo13.png",
         type: "image/png",
       },
     ],
