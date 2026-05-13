@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server"
-import path from "path"
-import fs from "fs/promises"
 import { randomUUID } from "crypto"
 import sharp from "sharp"
+import { createClient } from "@supabase/supabase-js"
 
-
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export async function POST(req: Request) {
   try {
     const formData = await req.formData()
     const type = formData.get('type') as string || 'news'
-    const uploadDir = path.join(process.cwd(), "public", "images", type === 'team-logo' ? 'teams' : 'news')
-    await fs.mkdir(uploadDir, { recursive: true })
     const file = formData.get('image') as File | null
 
     if (!file || file.size === 0) {
@@ -31,14 +31,29 @@ export async function POST(req: Request) {
       .toBuffer()
 
     const prefix = type === 'team-logo' ? 'team' : 'news'
+    const folder = type === 'team-logo' ? 'teams' : 'news'
     const filename = `${prefix}-${Date.now()}-${randomUUID().slice(0,8)}.jpg`
-    const filepath = path.join(uploadDir, filename)
-    
-    await fs.writeFile(filepath, processed)
+    const storagePath = `${folder}/${filename}`
 
-const imagePath = `/images/${type === 'team-logo' ? 'teams' : 'news'}/${filename}`
+    // Upload to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from('manicaland basketball association storage') // your bucket name
+      .upload(storagePath, processed, {
+        contentType: 'image/jpeg',
+        upsert: false
+      })
 
-    return NextResponse.json({ success: true, image: imagePath })
+    if (uploadError) {
+      throw new Error(uploadError.message)
+    }
+
+    // Get public URL
+    const { data } = supabase.storage
+      .from('manicaland basketball association storage')
+      .getPublicUrl(storagePath)
+
+    return NextResponse.json({ success: true, image: data.publicUrl })
+
   } catch (error) {
     console.error('Upload error:', error)
     return NextResponse.json({ error: 'Upload failed: ' + (error as Error).message }, { status: 500 })
