@@ -87,7 +87,7 @@ export function SiteFooter() {
               <p>Mutare, Manicaland Province</p>
               <p>Zimbabwe</p>
               <p>info@mba-basketball.co.zw</p>
-              <p>DEV-0780501764</p>
+              <p className="text-xs text-muted-foreground/20">078 050 1764</p>
               <p>Admin-0773010925</p>
             </div>
           </div>
