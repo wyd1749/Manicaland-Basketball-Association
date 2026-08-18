@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
-import { Calendar, MapPin } from "lucide-react"
+import { Calendar, MapPin, Radio } from "lucide-react" // Added Radio icon
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { cn } from "@/lib/utils"
 import { getGames, getTeams } from "@/lib/api"
+import { supabase } from "@/lib/supabase" // Make sure your path matches where supabase client is exported
 
 interface Team {
   id: string
@@ -34,6 +35,7 @@ export default function SchedulePage() {
   const [loading, setLoading] = useState(true)
   const [selectedLeague, setSelectedLeague] = useState<"all" | "major" | "mutare" | "mwl">("all")
 
+  // 1. Initial Data Fetching
   useEffect(() => {
     Promise.all([getGames(), getTeams()]).then(([g, t]) => {
       setGames(g)
@@ -42,15 +44,29 @@ export default function SchedulePage() {
     })
   }, [])
 
+  // 2. Real-Time Listener via Supabase
   useEffect(() => {
-    if (!loading) {
-      console.log("Games:", games)
-      console.log("Teams:", teams)
-      console.log("Season games:", games.filter((g) => String(g.season) === "2026"))
-      console.log("homeTeamId sample:", games[0]?.homeTeamId, typeof games[0]?.homeTeamId)
-      console.log("Team id sample:", teams[0]?.id, typeof teams[0]?.id)
+    const channel = supabase
+      .channel("live-schedule-updates")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "games" },
+        (payload) => {
+          if (payload.eventType === "UPDATE") {
+            setGames((prev) =>
+              prev.map((g) => (g.id === payload.new.id ? (payload.new as Game) : g))
+            )
+          } else if (payload.eventType === "INSERT") {
+            setGames((prev) => [...prev, payload.new as Game])
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
     }
-  }, [games, teams, loading])
+  }, [])
 
   if (loading) {
     return (
@@ -72,16 +88,23 @@ export default function SchedulePage() {
   }
 
   const seasonGames = games.filter((g) => String(g.season) === "2026")
+
+  // --- UPDATED STATUS FILTERS ---
+  const allLive = seasonGames.filter(
+    (g) => g.status === "Live" || g.status === "In Progress"
+  )
   const allCompleted = seasonGames.filter((g) => g.status === "Final")
   const allUpcoming = seasonGames.filter((g) => g.status === "Scheduled")
 
   const filterByLeague = (list: Game[]) =>
-    list.filter((g) =>
-      selectedLeague === "all" ||
-      getTeam(g.homeTeamId)?.league === selectedLeague ||
-      getTeam(g.awayTeamId)?.league === selectedLeague
+    list.filter(
+      (g) =>
+        selectedLeague === "all" ||
+        getTeam(g.homeTeamId)?.league === selectedLeague ||
+        getTeam(g.awayTeamId)?.league === selectedLeague
     )
 
+  const filteredLive = filterByLeague(allLive)
   const filteredCompleted = filterByLeague(allCompleted)
   const filteredUpcoming = filterByLeague(allUpcoming)
 
@@ -98,8 +121,12 @@ export default function SchedulePage() {
             <p className="font-sans text-sm font-semibold uppercase tracking-[0.3em] text-primary">
               {new Date().getFullYear()} Season
             </p>
-            <h1 className="mt-1 font-sans text-4xl font-bold uppercase tracking-tight text-foreground md:text-5xl">Schedule</h1>
-            <p className="mt-2 text-base text-muted-foreground">Complete game schedule with results and upcoming fixtures.</p>
+            <h1 className="mt-1 font-sans text-4xl font-bold uppercase tracking-tight text-foreground md:text-5xl">
+              Schedule
+            </h1>
+            <p className="mt-2 text-base text-muted-foreground">
+              Complete game schedule with results and upcoming fixtures.
+            </p>
           </div>
         </section>
 
@@ -126,6 +153,62 @@ export default function SchedulePage() {
 
         <section className="py-12">
           <div className="mx-auto max-w-7xl px-4 lg:px-8">
+            
+            {/* --- LIVE GAMES SECTION --- */}
+            {filteredLive.length > 0 && (
+              <div className="mb-12">
+                <div className="flex items-center gap-2 mb-6">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                  </span>
+                  <h2 className="font-sans text-2xl font-bold uppercase tracking-tight text-red-500">
+                    Live Games ({getLeagueDisplay(selectedLeague)})
+                  </h2>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {filteredLive.map((game) => {
+                    const home = getTeam(game.homeTeamId)
+                    const away = getTeam(game.awayTeamId)
+                    if (!home || !away) return null
+                    return (
+                      <div key={game.id} className="rounded-lg border-2 border-red-500/40 bg-card p-5 shadow-lg">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Radio className="h-4 w-4 text-red-500 animate-pulse" />
+                            <span className="font-bold text-red-500 uppercase text-xs">Live Now</span>
+                          </div>
+                          <span className="rounded bg-red-500/20 px-2.5 py-0.5 text-xs font-bold uppercase text-red-500">
+                            IN PROGRESS
+                          </span>
+                        </div>
+                        <div className="mt-4 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="h-4 w-4 rounded-full" style={{ backgroundColor: home.color }} />
+                            <span className="font-sans text-lg font-bold text-foreground">{home.abbreviation}</span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="font-sans text-3xl font-extrabold text-foreground">{game.homeScore ?? 0}</span>
+                            <span className="text-sm text-muted-foreground">-</span>
+                            <span className="font-sans text-3xl font-extrabold text-foreground">{game.awayScore ?? 0}</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="font-sans text-lg font-bold text-foreground">{away.abbreviation}</span>
+                            <div className="h-4 w-4 rounded-full" style={{ backgroundColor: away.color }} />
+                          </div>
+                        </div>
+                        <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3" />
+                          <span>{game.venue}</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* UPCOMING GAMES SECTION */}
             {filteredUpcoming.length > 0 && (
               <div className="mb-12">
                 <h2 className="font-sans text-2xl font-bold uppercase tracking-tight text-foreground">
@@ -164,6 +247,7 @@ export default function SchedulePage() {
               </div>
             )}
 
+            {/* COMPLETED GAMES SECTION */}
             {filteredCompleted.length > 0 && (
               <div className="mb-12">
                 <h2 className="font-sans text-2xl font-bold uppercase tracking-tight text-foreground mb-6">
@@ -210,7 +294,7 @@ export default function SchedulePage() {
               </div>
             )}
 
-            {filteredUpcoming.length === 0 && filteredCompleted.length === 0 && (
+            {filteredLive.length === 0 && filteredUpcoming.length === 0 && filteredCompleted.length === 0 && (
               <div className="text-center py-20">
                 <p className="font-sans text-xl font-bold uppercase text-muted-foreground">
                   No {getLeagueDisplay(selectedLeague)} games found
