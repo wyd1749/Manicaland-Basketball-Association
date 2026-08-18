@@ -14,18 +14,16 @@ import {
   Trash2,
   X,
   ChevronRight,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react"
+import Link from "next/link"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
-import Link from "next/link"
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Upload, Image as ImageIcon } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 type Tab = "overview" | "teams" | "mwl" | "players" | "games" | "news"
 
@@ -149,7 +147,6 @@ function gameStatusLabel(status: string) {
   return status
 }
 
-
 function mapNews(row: Record<string, unknown>): NewsItem {
   return {
     id: row.id as string,
@@ -160,6 +157,50 @@ function mapNews(row: Record<string, unknown>): NewsItem {
     date: row.date as string,
     category: (row.category as string) ?? "Announcement",
   }
+}
+
+/* ========== SUCCESS POPUP MODAL ========== */
+function SuccessModal({
+  isOpen,
+  onClose,
+  title = "Registration Completed",
+  message = "The player has been successfully registered to the system.",
+}: {
+  isOpen: boolean
+  onClose: () => void
+  title?: string
+  message?: string
+}) {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-lg animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center justify-between border-b border-border pb-3">
+          <h3 className="font-sans text-base font-bold uppercase text-foreground">
+            {title}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="py-4">
+          <p className="text-sm text-muted-foreground">{message}</p>
+        </div>
+        <div className="flex justify-end pt-2">
+          <button
+            onClick={onClose}
+            className="rounded-md bg-primary px-4 py-2 font-sans text-xs font-bold uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export function AdminDashboard({ onLogout }: AdminDashboardProps) {
@@ -196,7 +237,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: "news", label: "News", icon: Newspaper },
   ]
 
-  // Generic Supabase CRUD handler — keeps the same interface as the old apiAction
   async function apiAction(
     action: string,
     entity: string,
@@ -204,7 +244,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   ) {
     const supabase = createClient()
 
-    // Map camelCase payload keys back to snake_case for DB
     const toDb = (p: Record<string, unknown>) => {
       const out: Record<string, unknown> = { ...p }
       if ("teamId" in out) { out.team_id = out.teamId; delete out.teamId }
@@ -218,16 +257,13 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     if (action === "create") {
       const { id: _id, ...rest } = payload as { id?: string } & Record<string, unknown>
       const result = await supabase.from(entity).insert(toDb(rest)).select()
-      console.log("INSERT", entity, toDb(rest), result)
       if (result.error) { alert("Save failed: " + result.error.message); return }
     } else if (action === "update") {
       const { id, ...rest } = payload as { id: string } & Record<string, unknown>
       const result = await supabase.from(entity).update(toDb(rest)).eq("id", id).select()
-      console.log("UPDATE", entity, toDb(rest), result)
       if (result.error) { alert("Save failed: " + result.error.message); return }
     } else if (action === "delete") {
       const result = await supabase.from(entity).delete().eq("id", payload.id)
-      console.log("DELETE", entity, payload.id, result)
       if (result.error) { alert("Delete failed: " + result.error.message); return }
     }
 
@@ -381,21 +417,20 @@ function OverviewTab({
                   <span className="text-sm text-foreground">
                     {home?.abbreviation} vs {away?.abbreviation}
                   </span>
-                      <span
-                        className={cn(
-                          "rounded px-2 py-0.5 text-[10px] font-bold uppercase",
-                          gameStatusLabel(game.status) === "Final"
-                            ? "bg-primary/20 text-primary"
-                            : gameStatusLabel(game.status) === "Scheduled"
-                              ? "bg-muted text-muted-foreground"
-                              : "bg-destructive/20 text-destructive"
-                        )}
-                      >
-                        {gameStatusLabel(game.status) === "Final"
-                          ? `${game.homeScore}-${game.awayScore}`
-                          : gameStatusLabel(game.status)}
-                      </span>
-
+                  <span
+                    className={cn(
+                      "rounded px-2 py-0.5 text-[10px] font-bold uppercase",
+                      gameStatusLabel(game.status) === "Final"
+                        ? "bg-primary/20 text-primary"
+                        : gameStatusLabel(game.status) === "Scheduled"
+                          ? "bg-muted text-muted-foreground"
+                          : "bg-destructive/20 text-destructive"
+                    )}
+                  >
+                    {gameStatusLabel(game.status) === "Final"
+                      ? `${game.homeScore}-${game.awayScore}`
+                      : gameStatusLabel(game.status)}
+                  </span>
                 </div>
               )
             })}
@@ -413,9 +448,7 @@ function OverviewTab({
               .sort((a: Player, b: Player) => b.ppg - a.ppg)
               .slice(0, 5)
               .map((player: Player) => {
-                const team = data.teams.find(
-                  (t: Team) => t.id === player.teamId
-                )
+                const team = data.teams.find((t: Team) => t.id === player.teamId)
                 return (
                   <div
                     key={player.id}
@@ -516,7 +549,7 @@ function TeamsTab({
           className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 font-sans text-xs font-bold uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/90"
         >
           <Plus className="h-4 w-4" />
-          Add Team
+          Register Team
         </button>
       </div>
 
@@ -568,21 +601,13 @@ function TeamsTab({
                 className="h-10 w-full cursor-pointer rounded-md border border-border"
               />
             </div>
-            <div className="sm:col-span-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Logo
-              </Label>
-              <p className="text-xs text-muted-foreground mt-1">
-                Logo upload disabled.
-              </p>
-            </div>
           </div>
           <div className="mt-4 flex gap-2">
             <button
               onClick={handleSave}
               className="rounded-md bg-primary px-6 py-2 font-sans text-xs font-bold uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              {editing ? "Update Team" : "Create Team"}
+              {editing ? "Update Team" : "Register Team"}
             </button>
             <button
               onClick={() => { setCreating(false); setEditing(null) }}
@@ -639,7 +664,7 @@ function TeamsTab({
   )
 }
 
-/* ========== PLAYERS CRUD ========== */
+/* ========== PLAYERS CRUD WITH POPUP MODAL ========== */
 function PlayersTab({
   players,
   teams,
@@ -651,6 +676,8 @@ function PlayersTab({
 }) {
   const [editing, setEditing] = useState<Player | null>(null)
   const [creating, setCreating] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+
   const emptyPlayer: Omit<Player, "id"> = {
     name: "",
     teamId: teams[0]?.id || "1",
@@ -669,8 +696,12 @@ function PlayersTab({
   function openEdit(player: Player) { setForm(player); setEditing(player); setCreating(false) }
 
   async function handleSave() {
-    if (editing) { await onAction("update", "players", form as Record<string, unknown>) }
-    else { await onAction("create", "players", form as Record<string, unknown>) }
+    if (editing) { 
+      await onAction("update", "players", form as Record<string, unknown>) 
+    } else { 
+      await onAction("create", "players", form as Record<string, unknown>) 
+      setShowSuccessModal(true) // Triggers the popup modal
+    }
     setCreating(false); setEditing(null)
   }
 
@@ -685,6 +716,14 @@ function PlayersTab({
 
   return (
     <div>
+      {/* Pop-up Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Registration Completed"
+        message="The player registration has been successfully saved."
+      />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-sans text-3xl font-bold uppercase tracking-tight text-foreground">Manage Players</h1>
@@ -692,7 +731,7 @@ function PlayersTab({
         </div>
         <button onClick={openCreate} className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 font-sans text-xs font-bold uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/90">
           <Plus className="h-4 w-4" />
-          Add Player
+          Register Player
         </button>
       </div>
 
@@ -728,7 +767,7 @@ function PlayersTab({
           </div>
           <div className="mt-4 flex gap-2">
             <button onClick={handleSave} className="rounded-md bg-primary px-6 py-2 font-sans text-xs font-bold uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/90">
-              {editing ? "Update Player" : "Create Player"}
+              {editing ? "Update Player" : "Register Player"}
             </button>
             <button onClick={() => { setCreating(false); setEditing(null) }} className="rounded-md border border-border px-6 py-2 font-sans text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground">
               Cancel
@@ -930,7 +969,6 @@ function GamesTab({
                         {gameStatusLabel(game.status)}
                       </span>
                     </td>
-
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
                         <button onClick={() => openEdit(game)} className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary" aria-label="Edit game">
@@ -952,7 +990,7 @@ function GamesTab({
   )
 }
 
-/* ========== DRAG DROP IMAGE (unchanged) ========== */
+/* ========== DRAG DROP IMAGE ========== */
 function DragDropImage({
   image,
   onImageChange,
@@ -1099,7 +1137,7 @@ function NewsTab({
         </div>
         <button onClick={openCreate} className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 font-sans text-xs font-bold uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/90">
           <Plus className="h-4 w-4" />
-          Add Article
+          Register Article
         </button>
       </div>
 
