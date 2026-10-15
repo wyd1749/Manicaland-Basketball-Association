@@ -8,6 +8,7 @@ interface Team {
   id: string
   name: string
   abbreviation: string
+  color: string
 }
 
 interface Game {
@@ -32,11 +33,13 @@ export function ScoresTicker() {
         .select("id, home_team_id, away_team_id, home_score, away_score, date, status")
         .eq("status", "Final")
         .order("date", { ascending: false })
-        .limit(4),
-      supabase.from("teams").select("id, name, abbreviation"),
-    ]).then(([{ data: gamesData }, { data: teamsData }]) => {
-      if (gamesData) setGames(gamesData)
-      if (teamsData) setTeams(teamsData)
+        .limit(3),
+      supabase.from("teams").select("id, name, abbreviation, color"),
+    ]).then(([g, t]) => {
+      if (g.error) console.error("Supabase games error:", g.error.message)
+      if (t.error) console.error("Supabase teams error:", t.error.message)
+      if (g.data) setGames(g.data)
+      if (t.data) setTeams(t.data)
     })
   }, [])
 
@@ -45,42 +48,81 @@ export function ScoresTicker() {
   const getTeam = (id: string) => teams.find((t) => t.id === id)
 
   return (
-    <section className="border-b border-border bg-secondary">
-      <div className="mx-auto max-w-7xl overflow-x-auto px-4 lg:px-8">
-        <div className="flex items-center gap-1 py-3">
-          <span className="mr-4 shrink-0 font-sans text-xs font-bold uppercase tracking-wider text-primary">
-            Scores
-          </span>
+    <section className="border-b border-border bg-secondary py-8">
+      <div className="mx-auto max-w-7xl px-4 lg:px-8">
+        <div className="flex items-end justify-between">
+          <h2 className="font-sans text-xl font-bold uppercase tracking-wide text-foreground">
+            Latest results
+          </h2>
+          <Link
+            href="/schedule"
+            className="font-sans text-sm font-semibold uppercase tracking-wider text-primary hover:text-primary/80"
+          >
+            View all results
+          </Link>
+        </div>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
           {games.map((game) => {
             const home = getTeam(game.home_team_id)
             const away = getTeam(game.away_team_id)
             if (!home || !away) return null
+            const homeWon = (game.home_score ?? 0) > (game.away_score ?? 0)
+            const awayWon = (game.away_score ?? 0) > (game.home_score ?? 0)
+
             return (
               <Link
                 key={game.id}
                 href="/schedule"
-                className="flex shrink-0 items-center gap-4 rounded-md border border-border bg-background px-4 py-2 transition-colors hover:border-primary/50"
+                className="rounded-lg border border-border bg-background p-4 transition-colors hover:border-primary/60 focus-visible:outline-2 focus-visible:outline-ring"
               >
-                <div className="flex flex-col items-center gap-0.5">
-                  <span className="font-sans text-xs font-bold text-foreground">
-                    {home.abbreviation}
-                  </span>
-                  <span className="font-sans text-lg font-bold text-foreground">
-                    {game.home_score}
-                  </span>
-                </div>
-                <span className="text-xs text-muted-foreground">vs</span>
-                <div className="flex flex-col items-center gap-0.5">
-                  <span className="font-sans text-xs font-bold text-foreground">
-                    {away.abbreviation}
-                  </span>
-                  <span className="font-sans text-lg font-bold text-foreground">
-                    {game.away_score}
-                  </span>
-                </div>
-                <span className="rounded bg-primary/20 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">
+                <p className="text-xs text-muted-foreground">
+                  {new Date(game.date).toLocaleDateString("en-ZW", {
+                    weekday: "short",
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </p>
+
+                {[
+                  { team: home, score: game.home_score, won: homeWon },
+                  { team: away, score: game.away_score, won: awayWon },
+                ].map(({ team, score, won }) => (
+                  <div key={team.id} className="mt-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="flex size-8 items-center justify-center rounded-full font-sans text-[10px] font-bold text-white"
+                        style={{ backgroundColor: team.color }}
+                        aria-hidden
+                      >
+                        {team.abbreviation}
+                      </span>
+                      <span
+                        className={
+                          won
+                            ? "text-sm font-semibold text-foreground"
+                            : "text-sm text-muted-foreground"
+                        }
+                      >
+                        {team.name}
+                      </span>
+                    </div>
+                    <span
+                      className={
+                        won
+                          ? "font-sans text-2xl font-bold text-foreground"
+                          : "font-sans text-2xl font-bold text-muted-foreground"
+                      }
+                    >
+                      {score}
+                    </span>
+                  </div>
+                ))}
+
+                <p className="mt-3 text-right font-sans text-[11px] font-bold uppercase tracking-wider text-primary">
                   {game.status}
-                </span>
+                </p>
               </Link>
             )
           })}

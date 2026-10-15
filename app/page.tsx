@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { HeroSection } from "@/components/hero-section"
 import { ScoresTicker } from "@/components/scores-ticker"
+import { UpcomingFixtures } from "@/components/upcoming-fixtures"
 import { StandingsPreview } from "@/components/standings-preview"
 import { FeaturedPlayers } from "@/components/featured-players"
 import { NewsSection } from "@/components/news-section"
@@ -13,6 +14,7 @@ export default function HomePage() {
       <main className="flex-1">
         <HeroSection />
         <ScoresTicker />
+        <UpcomingFixtures />
         <StandingsPreview />
         <FeaturedPlayers />
         <NewsSection />
