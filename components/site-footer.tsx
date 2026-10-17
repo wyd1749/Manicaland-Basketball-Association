@@ -70,6 +70,12 @@ export function SiteFooter() {
         aria-hidden
         className="absolute right-0 top-0 h-16 w-24 bg-primary/80 [clip-path:polygon(0_0,100%_0,100%_100%)]"
       />
+      {/* Background picture: put the file at public/footer-bg.jpg (change the name here if different) */}
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-20 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/footer-bg.webp')" }}
+      />
       {/* Soft orange glow behind the content */}
       <div
         aria-hidden
@@ -143,7 +149,7 @@ export function SiteFooter() {
           <span aria-hidden className="hidden h-px w-56 bg-primary/80 md:block" />
           <div className="flex-1 text-center text-sm text-foreground/80">
             <p>© 2026 Manicaland Basketball Association. All rights reserved.</p>
-            <p className="mt-2 text-base text-primary">Developed by Tinashejmbanje13</p>
+            <p className="mt-2 text-base text-primary">Developed by Urban Tech Solutions</p>
           </div>
           <span aria-hidden className="hidden h-px w-56 bg-primary/80 md:block" />
         </div>
