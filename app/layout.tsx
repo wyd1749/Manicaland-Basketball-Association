@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { Oswald, Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { ScrollReveal } from "@/components/scroll-reveal"
 import "./globals.css"
 
 const oswald = Oswald({
@@ -64,6 +65,7 @@ export default function RootLayout({
         className={`${oswald.variable} ${inter.variable} font-serif antialiased`}
       >
         {children}
+        <ScrollReveal />
         <Analytics />
       </body>
     </html>
