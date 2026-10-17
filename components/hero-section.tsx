@@ -73,7 +73,7 @@ export function HeroSection() {
       {/* Main content */}
       <div className="relative z-10 mx-auto flex max-w-7xl flex-col px-4 pb-12 pt-14 md:min-h-[34rem] md:pt-20 lg:px-8">
         <div className="mb-4 flex items-center gap-4">
-          <p className="font-sans text-sm uppercase tracking-[0.3em] text-primary">2026 Season</p>
+          <p className="font-sans text-sm uppercase tracking-[0.3em] text-primary">2026/27 Season</p>
           <span aria-hidden className="hidden h-0.5 w-24 bg-primary sm:block" />
         </div>
 
