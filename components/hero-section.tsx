@@ -11,36 +11,20 @@ const stats = [
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden border-b border-border bg-background">
-      {/* Drawn basketball */}
-      <svg
-        aria-hidden
-        viewBox="0 0 200 200"
-        className="absolute -right-10 top-1/2 hidden h-[34rem] w-[34rem] -translate-y-1/2 text-primary/25 md:block"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-      >
-        <circle cx="100" cy="100" r="96" />
-        <path d="M100 4v192M4 100h192" />
-        <path d="M30 30c40 30 40 110 0 140M170 30c-40 30-40 110 0 140" />
-      </svg>
-      {/* Fade into the page on the left and bottom */}
+      {/* Player photo */}
       <div
         aria-hidden
-        className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-transparent md:via-background/60"
+        className="absolute inset-y-0 right-0 w-full bg-cover bg-[position:60%_center] opacity-40 md:w-3/5 md:bg-center md:opacity-100"
+        style={{ backgroundImage: "url('/hero.jpg')" }}
+      />
+      {/* Fade the photo into the page on the left and bottom */}
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-transparent md:via-background/50"
       />
       <div
         aria-hidden
-        className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-background to-transparent"
-      />
-      {/* Diagonal orange accents */}
-      <div
-        aria-hidden
-        className="absolute -right-24 top-0 hidden h-full w-40 -skew-x-[24deg] bg-primary/90 md:block"
-      />
-      <div
-        aria-hidden
-        className="absolute right-24 top-0 hidden h-full w-6 -skew-x-[24deg] bg-primary/40 md:block"
+        className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-background to-transparent"
       />
 
       <div className="relative mx-auto flex max-w-7xl flex-col px-4 pb-10 pt-14 md:min-h-[34rem] md:pt-20 lg:px-8">
