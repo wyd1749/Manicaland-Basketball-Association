@@ -1,13 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Image from "next/image"
 import { ChevronLeft, ChevronRight, Search } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { getPlayers, getTeams } from "@/lib/api"
+
+// Background image in the /public folder. Change the extension here if needed (.png or .webp).
+const BG_IMAGE = "/players-bg.webp"
 
 interface Player {
   id: string
@@ -60,6 +62,7 @@ export default function PlayersPage() {
   const [players, setPlayers] = useState<Player[]>([])
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const [search, setSearch] = useState("")
   const [genderFilter, setGenderFilter] = useState<"All" | "Men" | "Women">("All")
   const [posFilter, setPosFilter] = useState("All")
@@ -67,29 +70,39 @@ export default function PlayersPage() {
   const [page, setPage] = useState(1)
 
   useEffect(() => {
-    Promise.all([getPlayers(), getTeams()]).then(([p, t]) => {
-      // If api normalization didn’t cover it, normalize again defensively.
-      setPlayers(
-        (p as any[]).map((pl) => ({
-          ...pl,
-          teamId: pl.teamId ?? pl.team_id,
-          ppg: pl.ppg ?? pl.ppg_points,
-          rpg: pl.rpg ?? pl.rebounds,
-          apg: pl.apg ?? pl.assists,
-        }))
-      )
-      setTeams(t)
-      setLoading(false)
-    })
+    Promise.all([getPlayers(), getTeams()])
+      .then(([p, t]) => {
+        // If api normalization didn’t cover it, normalize again defensively.
+        setPlayers(
+          (p as any[]).map((pl) => ({
+            ...pl,
+            teamId: pl.teamId ?? pl.team_id,
+            ppg: pl.ppg ?? pl.ppg_points,
+            rpg: pl.rpg ?? pl.rebounds,
+            apg: pl.apg ?? pl.assists,
+          }))
+        )
+        setTeams(t)
+      })
+      .catch((err) => {
+        console.error("Failed to load players page data:", err)
+        setError("Could not load players. Please refresh the page and try again.")
+      })
+      .finally(() => setLoading(false))
   }, [])
 
-  if (loading) {
+  if (loading || error) {
     return (
       <div className="flex min-h-screen flex-col">
         <SiteHeader />
-        <main className="flex flex-1 items-center justify-center">
-          <div className="font-sans text-lg font-bold uppercase text-muted-foreground">
-            Loading...
+        <main className="flex flex-1 items-center justify-center px-4 text-center">
+          <div
+            className={cn(
+              "font-sans text-lg font-bold uppercase",
+              error ? "text-destructive" : "text-muted-foreground"
+            )}
+          >
+            {error || "Loading..."}
           </div>
         </main>
         <SiteFooter />
@@ -120,14 +133,11 @@ export default function PlayersPage() {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="relative isolate flex-1 bg-background">
-        {/* Page background. Image file lives in /public/players-bg.png */}
-        <Image
-          src="/players-bg.png"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="-z-10 object-cover object-top"
+        {/* Page background: file lives in /public (see BG_IMAGE at the top) */}
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 bg-cover bg-top bg-no-repeat"
+          style={{ backgroundImage: `url('${BG_IMAGE}')` }}
         />
 
         <section className="border-b border-primary/60">
