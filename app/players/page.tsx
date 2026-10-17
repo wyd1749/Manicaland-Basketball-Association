@@ -133,12 +133,18 @@ export default function PlayersPage() {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="relative isolate flex-1 bg-background">
-        {/* Page background: file lives in /public (see BG_IMAGE at the top) */}
+        {/* Page background: fixed-height area at the top that fades into the page.
+            File lives in /public (see BG_IMAGE at the top). */}
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-cover bg-top bg-no-repeat"
-          style={{ backgroundImage: `url('${BG_IMAGE}')` }}
-        />
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[34rem] md:h-[56rem]"
+        >
+          <div
+            className="absolute inset-0 bg-cover bg-[position:85%_top] bg-no-repeat md:bg-top"
+            style={{ backgroundImage: `url('${BG_IMAGE}')` }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+        </div>
 
         <section className="border-b border-primary/60">
           <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
