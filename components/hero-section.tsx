@@ -1,6 +1,10 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, BarChart3, Star, Trophy, Users } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 function BasketballIcon({ className }: { className?: string }) {
   return (
@@ -20,8 +24,7 @@ function BasketballIcon({ className }: { className?: string }) {
   )
 }
 
-const stats = [
-  { icon: BasketballIcon, title: "12 teams", note: "Competing for glory" },
+const staticStats = [
   { icon: Trophy, title: "League & cup", note: "Multiple competitions" },
   { icon: Users, title: "Youth development", note: "Building the next generation" },
   { icon: Star, title: "Community impact", note: "Basketball for a better tomorrow" },
@@ -30,28 +33,61 @@ const stats = [
 const values = ["Discipline", "Talent", "Unity"]
 
 export function HeroSection() {
+  // Real number of teams from the database (null while loading)
+  const [teamCount, setTeamCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from("teams")
+      .select("*", { count: "exact", head: true })
+      .then(({ count, error }) => {
+        if (error) {
+          console.error("Supabase teams count error:", error.message)
+          return
+        }
+        setTeamCount(count ?? 0)
+      })
+  }, [])
+
+  const stats = [
+    {
+      icon: BasketballIcon,
+      title: teamCount === null ? "Teams" : `${teamCount} ${teamCount === 1 ? "team" : "teams"}`,
+      note: "Competing for glory",
+    },
+    ...staticStats,
+  ]
+
   return (
     <section className="relative overflow-hidden border-b border-border bg-background">
-      {/* Player photo: file lives in /public/hero.png */}
-      <div className="absolute inset-y-0 right-0 w-full opacity-40 md:w-[62%] md:opacity-100">
+      {/* Player photo: file lives in /public/hero.png.
+          Mobile: shown in full above the text. Desktop: fills the right side behind the text. */}
+      <div className="relative w-full md:absolute md:inset-y-0 md:right-0 md:w-[62%]">
         <Image
           src="/hero.png"
-          alt=""
-          fill
+          alt="Manicaland Basketball Association player with the ball"
+          width={1600}
+          height={900}
           priority
           sizes="(min-width: 768px) 62vw, 100vw"
-          className="object-cover object-[70%_center]"
+          className="h-auto w-full md:h-full md:object-cover md:object-[70%_center]"
+        />
+        {/* Mobile only: fade the bottom of the photo into the page */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-background to-transparent md:hidden"
         />
       </div>
 
-      {/* Fade the photo into the page on the left and bottom */}
+      {/* Desktop only: fade the photo into the page on the left and bottom */}
       <div
         aria-hidden
-        className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent md:via-background/40 md:to-transparent"
+        className="absolute inset-0 hidden bg-gradient-to-r from-background via-background/40 to-transparent md:block"
       />
       <div
         aria-hidden
-        className="absolute inset-x-0 bottom-0 h-1/5 bg-gradient-to-t from-background/90 to-transparent"
+        className="absolute inset-x-0 bottom-0 hidden h-1/5 bg-gradient-to-t from-background/90 to-transparent md:block"
       />
 
       {/* Discipline / Talent / Unity */}
@@ -71,7 +107,7 @@ export function HeroSection() {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 mx-auto flex max-w-7xl flex-col px-4 pb-12 pt-14 md:min-h-[34rem] md:pt-20 lg:px-8">
+      <div className="relative z-10 mx-auto flex max-w-7xl flex-col px-4 pb-12 pt-4 md:min-h-[34rem] md:pt-20 lg:px-8">
         <div className="mb-4 flex items-center gap-4">
           <p className="font-sans text-sm uppercase tracking-[0.3em] text-primary">2026/27 Season</p>
           <span aria-hidden className="hidden h-0.5 w-24 bg-primary sm:block" />
