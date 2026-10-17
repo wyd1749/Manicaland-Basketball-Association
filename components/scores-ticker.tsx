@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
+import { TeamLogo, pickLogo } from "@/components/team-logo"
 
 interface Team {
   id: string
   name: string
   abbreviation: string
   color: string
+  logo?: string | null
 }
 
 interface Game {
@@ -34,12 +36,22 @@ export function ScoresTicker() {
         .eq("status", "Final")
         .order("date", { ascending: false })
         .limit(3),
-      supabase.from("teams").select("id, name, abbreviation, color"),
+      supabase.from("teams").select("*"),
     ]).then(([g, t]) => {
       if (g.error) console.error("Supabase games error:", g.error.message)
       if (t.error) console.error("Supabase teams error:", t.error.message)
       if (g.data) setGames(g.data)
-      if (t.data) setTeams(t.data)
+      if (t.data) {
+        setTeams(
+          t.data.map((row) => ({
+            id: row.id,
+            name: row.name,
+            abbreviation: row.abbreviation,
+            color: row.color,
+            logo: pickLogo(row),
+          }))
+        )
+      }
     })
   }, [])
 
@@ -91,13 +103,13 @@ export function ScoresTicker() {
                 ].map(({ team, score, won }) => (
                   <div key={team.id} className="mt-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span
-                        className="flex size-8 items-center justify-center rounded-full font-sans text-[10px] font-bold text-white"
-                        style={{ backgroundColor: team.color }}
-                        aria-hidden
-                      >
-                        {team.abbreviation}
-                      </span>
+                      <TeamLogo
+                        name={team.name}
+                        logo={team.logo}
+                        abbreviation={team.abbreviation}
+                        color={team.color}
+                        className="size-8"
+                      />
                       <span
                         className={
                           won

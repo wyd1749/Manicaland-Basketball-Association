@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
+import { TeamLogo, pickLogo } from "@/components/team-logo"
 
 interface Team {
   id: string
@@ -12,6 +13,7 @@ interface Team {
   losses: number
   league: string
   color: string
+  logo?: string | null
 }
 
 interface FinalGame {
@@ -47,7 +49,7 @@ export function StandingsPreview() {
   useEffect(() => {
     const supabase = createClient()
     Promise.all([
-      supabase.from("teams").select("id, name, abbreviation, wins, losses, league, color"),
+      supabase.from("teams").select("*"),
       supabase
         .from("games")
         .select("home_team_id, away_team_id, home_score, away_score")
@@ -58,11 +60,23 @@ export function StandingsPreview() {
       if (t.error) console.error("Supabase teams error:", t.error.message)
       if (g.error) console.error("Supabase games error:", g.error.message)
       if (t.data) {
-        const sorted = [...t.data].sort(
-          (a, b) =>
-            b.wins / (b.wins + b.losses || 1) - a.wins / (a.wins + a.losses || 1)
-        )
-        setTeams(sorted)
+        // wins/losses can arrive as strings from the database, so force numbers
+        // (otherwise "14" + "8" becomes "148" instead of 22).
+        const cleaned: Team[] = t.data.map((row) => ({
+          id: row.id,
+          name: row.name,
+          abbreviation: row.abbreviation,
+          league: row.league,
+          color: row.color,
+          wins: Number(row.wins) || 0,
+          losses: Number(row.losses) || 0,
+          logo: pickLogo(row),
+        }))
+        const winPct = (x: Team) => {
+          const played = x.wins + x.losses
+          return played ? x.wins / played : 0
+        }
+        setTeams(cleaned.sort((a, b) => winPct(b) - winPct(a) || b.wins - a.wins))
       }
       if (g.data) setForm(buildForm(g.data))
     })
@@ -117,13 +131,13 @@ export function StandingsPreview() {
                           <td className="px-4 py-3 font-bold text-muted-foreground">{i + 1}</td>
                           <td className="py-3">
                             <span className="flex items-center gap-3">
-                              <span
-                                className="flex size-7 items-center justify-center rounded-full font-sans text-[9px] font-bold text-white"
-                                style={{ backgroundColor: team.color }}
-                                aria-hidden
-                              >
-                                {team.abbreviation}
-                              </span>
+                              <TeamLogo
+                                name={team.name}
+                                logo={team.logo}
+                                abbreviation={team.abbreviation}
+                                color={team.color}
+                                className="size-7"
+                              />
                               <span className="font-medium text-foreground">{team.name}</span>
                             </span>
                           </td>
@@ -131,7 +145,7 @@ export function StandingsPreview() {
                           <td className="px-2 py-3 text-center font-semibold text-foreground">{team.wins}</td>
                           <td className="px-2 py-3 text-center text-muted-foreground">{team.losses}</td>
                           <td className="px-2 py-3 text-center text-muted-foreground">
-                            {((team.wins / (played || 1)) * 100).toFixed(0)}%
+                            {played ? Math.round((team.wins / played) * 100) : 0}%
                           </td>
                           <td className="px-4 py-3">
                             <span className="flex justify-end gap-1">
