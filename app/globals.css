@@ -114,3 +114,26 @@ main [data-reveal="in"] {
     transition: none;
   }
 }
+
+/* ---- Hero picture: endless slow zoom in and out ---- */
+@keyframes hero-zoom {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+.hero-zoom {
+  animation: hero-zoom 14s ease-in-out infinite;
+  transform-origin: 70% center;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-zoom {
+    animation: none;
+  }
+}

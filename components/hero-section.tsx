@@ -63,7 +63,7 @@ export function HeroSection() {
     <section className="relative overflow-hidden border-b border-border bg-background">
       {/* Player photo: file lives in /public/hero.png.
           Mobile: shown in full above the text. Desktop: fills the right side behind the text. */}
-      <div className="relative w-full md:absolute md:inset-y-0 md:right-0 md:w-[62%]">
+      <div className="relative w-full overflow-hidden md:absolute md:inset-y-0 md:right-0 md:w-[62%]">
         <Image
           src="/hero.png"
           alt="Manicaland Basketball Association player with the ball"
@@ -71,7 +71,7 @@ export function HeroSection() {
           height={900}
           priority
           sizes="(min-width: 768px) 62vw, 100vw"
-          className="h-auto w-full md:h-full md:object-cover md:object-[70%_center]"
+          className="hero-zoom h-auto w-full md:h-full md:object-cover md:object-[70%_center]"
         />
         {/* Mobile only: fade the bottom of the photo into the page */}
         <div
