@@ -119,29 +119,19 @@ export default function PlayersPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
-      <main className="relative flex-1 bg-background">
-        {/* Banner. Image file lives in /public/players-banner.png */}
-        <section className="relative overflow-hidden border-b border-primary/60 bg-background">
-          <div className="absolute inset-y-0 right-0 w-full opacity-40 md:w-1/2 md:opacity-100">
-            <Image
-              src="/players-banner.png"
-              alt=""
-              fill
-              priority
-              sizes="(min-width: 768px) 50vw, 100vw"
-              className="object-cover object-center"
-            />
-          </div>
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"
-          />
-          <div
-            aria-hidden
-            className="absolute -left-10 top-0 hidden h-full w-16 -skew-x-[24deg] bg-primary/80 md:block"
-          />
+      <main className="relative isolate flex-1 bg-background">
+        {/* Page background. Image file lives in /public/players-bg.png */}
+        <Image
+          src="/players-bg.png"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="-z-10 object-cover object-top"
+        />
 
-          <div className="relative mx-auto max-w-7xl px-4 py-10 lg:px-8">
+        <section className="border-b border-primary/60">
+          <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
             <p className="font-sans text-2xl font-bold uppercase text-primary">MBA</p>
             <h1 className="font-sans text-6xl font-bold uppercase leading-none text-foreground sm:text-7xl">
               Players
@@ -220,7 +210,7 @@ export default function PlayersPage() {
             </div>
 
             {/* Table */}
-            <div className="mt-6 overflow-hidden rounded-lg border border-border bg-card/80">
+            <div className="mt-6 overflow-hidden rounded-lg border border-border bg-card/80 backdrop-blur-sm">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
