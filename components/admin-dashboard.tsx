@@ -24,6 +24,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { LogoDropzone } from "@/components/logo-dropzone"
 
 type Tab = "overview" | "teams" | "mwl" | "players" | "games" | "news"
 
@@ -491,7 +492,7 @@ function TeamsTab({
     city: "",
     abbreviation: "",
     color: "#E86833",
-    logo: "/placeholder-logo.svg",
+    logo: "",
     wins: 0,
     losses: 0,
     league: "major",
@@ -599,6 +600,18 @@ function TeamsTab({
                 value={form.color}
                 onChange={(e) => setForm({ ...form, color: e.target.value })}
                 className="h-10 w-full cursor-pointer rounded-md border border-border"
+              />
+            </div>
+
+            {/* Team logo: drag and drop uploads to the Supabase "team-logos" bucket */}
+            <div className="sm:col-span-2 lg:col-span-3">
+              <label className="mb-1.5 block font-sans text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Team Logo
+              </label>
+              <LogoDropzone
+                value={form.logo}
+                onChange={(logo) => setForm({ ...form, logo })}
+                name={form.abbreviation || form.name}
               />
             </div>
           </div>
