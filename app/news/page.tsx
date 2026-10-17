@@ -53,7 +53,7 @@ export default function NewsPage() {
   const [news, setNews] = useState<NewsItem[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string | null>(null)
-  const [openId, setOpenId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   useEffect(() => {
     getNews().then((data) => {
@@ -66,10 +66,16 @@ export default function NewsPage() {
     () => (filter ? news.filter((n) => n.category.toLowerCase() === filter) : news),
     [news, filter]
   )
-  const featured = filtered[0]
-  const others = filtered.slice(1)
+  const featured = filtered.find((n) => n.id === selectedId) ?? filtered[0]
+  const others = filtered.filter((n) => n.id !== featured?.id)
 
-  const toggle = (id: string) => setOpenId((cur) => (cur === id ? null : id))
+  const selectArticle = (id: string) => {
+    setSelectedId(id)
+    // On stacked (mobile/tablet) layouts, bring the big article into view
+    if (typeof window !== "undefined" && window.innerWidth < 1280) {
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+  }
 
   if (loading) {
     return (
@@ -118,7 +124,7 @@ export default function NewsPage() {
                       type="button"
                       onClick={() => {
                         setFilter(match)
-                        setOpenId(null)
+                        setSelectedId(null)
                       }}
                       aria-pressed={active}
                       className={`flex items-center gap-3 rounded-lg px-4 py-3 text-left font-sans text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
@@ -138,7 +144,10 @@ export default function NewsPage() {
 
             {/* CENTER: featured story */}
             {featured ? (
-              <article className="relative isolate min-h-[420px] overflow-hidden rounded-xl border border-primary/50 bg-card lg:min-h-[560px]">
+              <article
+                key={featured.id}
+                className="relative isolate h-[560px] self-start overflow-hidden rounded-xl border border-primary/50 bg-card xl:sticky xl:top-6 xl:h-[calc(100vh-3rem)] xl:min-h-[560px]"
+              >
                 <Image
                   src={featured.image}
                   alt={featured.title}
@@ -148,7 +157,7 @@ export default function NewsPage() {
                   sizes="(max-width: 1280px) 100vw, 55vw"
                   className="-z-20 object-cover"
                 />
-                <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/95 via-black/55 to-transparent" />
+                <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/95 via-black/70 to-black/10" />
 
                 <div className="absolute inset-x-0 bottom-0 flex max-h-full flex-col gap-3 overflow-y-auto p-6 md:p-8">
                   <div className="flex flex-wrap items-center gap-3">
@@ -158,17 +167,9 @@ export default function NewsPage() {
                   <h2 className="font-sans text-3xl font-extrabold uppercase italic leading-tight text-white text-pretty md:text-5xl">
                     {featured.title}
                   </h2>
-                  <p className="max-w-2xl text-base leading-relaxed text-white/90">
-                    {openId === featured.id ? featured.content : featured.excerpt || featured.content}
+                  <p className="max-w-2xl whitespace-pre-line text-base leading-relaxed text-white/90">
+                    {featured.content || featured.excerpt}
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => toggle(featured.id)}
-                    className="mt-2 flex w-fit items-center gap-2 rounded-md bg-primary px-5 py-3 font-sans text-base font-bold text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                  >
-                    {openId === featured.id ? "Show Less" : "Read More"}
-                    <ArrowRight className="h-5 w-5" />
-                  </button>
                 </div>
               </article>
             ) : (
@@ -181,7 +182,6 @@ export default function NewsPage() {
             {others.length > 0 && (
               <div className="flex flex-col gap-4 lg:col-span-2 xl:col-span-1">
                 {others.map((item) => {
-                  const open = openId === item.id
                   return (
                     <article
                       key={item.id}
@@ -205,15 +205,15 @@ export default function NewsPage() {
                         <h3 className="font-sans text-xl font-extrabold uppercase italic leading-tight text-foreground text-pretty">
                           {item.title}
                         </h3>
-                        <p className={`text-sm leading-relaxed text-muted-foreground ${open ? "" : "line-clamp-2"}`}>
-                          {open ? item.content : item.excerpt || item.content}
+                        <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                          {item.excerpt || item.content}
                         </p>
                         <button
                           type="button"
-                          onClick={() => toggle(item.id)}
+                          onClick={() => selectArticle(item.id)}
                           className="mt-1 flex w-fit items-center gap-2 font-sans text-sm font-bold text-primary transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                         >
-                          {open ? "Show Less" : "Read More"}
+                          Read More
                           <ArrowRight className="h-4 w-4" />
                         </button>
                       </div>
