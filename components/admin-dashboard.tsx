@@ -27,6 +27,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { LogoDropzone } from "@/components/logo-dropzone"
 import { HighlightsTab } from "@/components/highlights-admin"
+import { EmojiPicker, insertEmoji } from "@/components/emoji-picker"
 import { mapHighlight, type Highlight } from "@/lib/highlights"
 
 type Tab = "overview" | "teams" | "mwl" | "players" | "games" | "news" | "highlights"
@@ -1177,7 +1178,7 @@ function NewsTab({
             </button>
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <FormField label="Title" value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
+            <FormField label="Title" value={form.title} onChange={(v) => setForm({ ...form, title: v })} emoji />
             <div>
               <label className="mb-1.5 block font-sans text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</label>
               <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground">
@@ -1194,12 +1195,10 @@ function NewsTab({
             </div>
           </div>
           <div className="mt-4">
-            <label className="mb-1.5 block font-sans text-xs font-bold uppercase tracking-wider text-muted-foreground">Excerpt</label>
-            <textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} rows={2} className="w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Short summary of the article..." />
+            <EmojiTextArea label="Excerpt" value={form.excerpt} onChange={(v) => setForm({ ...form, excerpt: v })} rows={2} placeholder="Short summary of the article..." />
           </div>
           <div className="mt-4">
-            <label className="mb-1.5 block font-sans text-xs font-bold uppercase tracking-wider text-muted-foreground">Content</label>
-            <textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={5} className="w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Full article content..." />
+            <EmojiTextArea label="Content" value={form.content} onChange={(v) => setForm({ ...form, content: v })} rows={5} placeholder="Full article content..." />
           </div>
           <div className="mt-4 flex gap-2">
             <button onClick={handleSave} className="rounded-md bg-primary px-6 py-2 font-sans text-xs font-bold uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/90">
@@ -1262,22 +1261,66 @@ function FormField({
   onChange,
   type = "text",
   placeholder,
+  emoji = false,
 }: {
   label: string
   value: string
   onChange: (value: string) => void
   type?: string
   placeholder?: string
+  emoji?: boolean
 }) {
+  const ref = React.useRef<HTMLInputElement>(null)
   return (
     <div>
-      <label className="mb-1.5 block font-sans text-xs font-bold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </label>
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <label className="block font-sans text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </label>
+        {emoji && (
+          <EmojiPicker compact onSelect={(e) => insertEmoji(ref.current, value, onChange, e)} />
+        )}
+      </div>
       <input
+        ref={ref}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+      />
+    </div>
+  )
+}
+
+/* ========== TEXTAREA WITH EMOJI PICKER ========== */
+function EmojiTextArea({
+  label,
+  value,
+  onChange,
+  rows,
+  placeholder,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  rows: number
+  placeholder?: string
+}) {
+  const ref = React.useRef<HTMLTextAreaElement>(null)
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <label className="block font-sans text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </label>
+        <EmojiPicker compact onSelect={(e) => insertEmoji(ref.current, value, onChange, e)} />
+      </div>
+      <textarea
+        ref={ref}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={rows}
         placeholder={placeholder}
         className="w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
       />
