@@ -8,6 +8,7 @@ import {
   Shield,
   Calendar,
   Newspaper,
+  Film,
   LogOut,
   Plus,
   Pencil,
@@ -25,8 +26,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { LogoDropzone } from "@/components/logo-dropzone"
+import { HighlightsTab } from "@/components/highlights-admin"
+import { mapHighlight, type Highlight } from "@/lib/highlights"
 
-type Tab = "overview" | "teams" | "mwl" | "players" | "games" | "news"
+type Tab = "overview" | "teams" | "mwl" | "players" | "games" | "news" | "highlights"
 
 interface AdminDashboardProps {
   onLogout: () => void
@@ -90,6 +93,7 @@ interface AppData {
   players: Player[]
   games: Game[]
   news: NewsItem[]
+  highlights: Highlight[]
 }
 
 // Helper: map snake_case Supabase rows to camelCase
@@ -210,18 +214,25 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const loadData = useCallback(async function loadData() {
     const supabase = createClient()
-    const [{ data: teams }, { data: players }, { data: games }, { data: news }] =
-      await Promise.all([
-        supabase.from("teams").select("*"),
-        supabase.from("players").select("*"),
-        supabase.from("games").select("*").order("date", { ascending: false }),
-        supabase.from("news").select("*").order("date", { ascending: false }),
-      ])
+    const [
+      { data: teams },
+      { data: players },
+      { data: games },
+      { data: news },
+      { data: highlights },
+    ] = await Promise.all([
+      supabase.from("teams").select("*"),
+      supabase.from("players").select("*"),
+      supabase.from("games").select("*").order("date", { ascending: false }),
+      supabase.from("news").select("*").order("date", { ascending: false }),
+      supabase.from("highlights").select("*").order("published_at", { ascending: false }),
+    ])
     setData({
       teams: (teams ?? []).map(mapTeam),
       players: (players ?? []).map(mapPlayer),
       games: (games ?? []).map(mapGame),
       news: (news ?? []).map(mapNews),
+      highlights: (highlights ?? []).map(mapHighlight),
     })
   }, [])
 
@@ -236,6 +247,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: "players", label: "Players", icon: Users },
     { id: "games", label: "Games", icon: Calendar },
     { id: "news", label: "News", icon: Newspaper },
+    { id: "highlights", label: "Highlights", icon: Film },
   ]
 
   async function apiAction(
@@ -346,6 +358,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               teams={data.teams}
               onAction={apiAction}
             />
+          ) : activeTab === "highlights" ? (
+            <HighlightsTab highlights={data.highlights} onChanged={loadData} />
           ) : (
             <NewsTab news={data.news} onAction={apiAction} />
           )}

@@ -13,12 +13,15 @@ const navLinks = [
   { href: "/standings", label: "Standings" },
   { href: "/schedule", label: "Schedule" },
   { href: "/news", label: "News" },
-
+  { href: "/highlights", label: "Highlights" },
 ]
 
 export function SiteHeader() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`)
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -46,7 +49,7 @@ export function SiteHeader() {
               href={link.href}
               className={cn(
                 "px-3 py-2 font-sans text-sm font-semibold uppercase tracking-wider transition-colors hover:text-primary",
-                pathname === link.href
+                isActive(link.href)
                   ? "text-primary"
                   : "text-muted-foreground"
               )}
@@ -75,7 +78,7 @@ export function SiteHeader() {
                 onClick={() => setOpen(false)}
                 className={cn(
                   "py-3 font-sans text-sm font-semibold uppercase tracking-wider transition-colors hover:text-primary",
-                  pathname === link.href
+                  isActive(link.href)
                     ? "text-primary"
                     : "text-muted-foreground"
                 )}
