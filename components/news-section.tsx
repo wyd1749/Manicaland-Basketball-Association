@@ -48,6 +48,7 @@ export function NewsSection() {
                 href={item.href}
                 className="mt-4 inline-block font-sans text-sm font-semibold uppercase tracking-wider text-primary hover:underline"
               >
+                
                 Read more
               </Link>
             </article>
