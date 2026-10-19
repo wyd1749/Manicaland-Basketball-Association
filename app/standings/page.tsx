@@ -13,6 +13,10 @@ const BANNER_IMAGE = "/standings-banner.webp"
 // Same public Supabase Storage bucket the Teams page uses for logos
 const LOGO_BUCKET = "team-logos"
 
+// Points system: change these two numbers to change the rules
+const POINTS_FOR_PLAYING = 1
+const POINTS_FOR_WIN = 1
+
 interface Team {
   id: string
   name: string
@@ -24,8 +28,11 @@ interface Team {
 }
 
 interface TeamRow extends Team {
+  played: number
   wins: number
   losses: number
+  diff: number
+  points: number
 }
 
 interface Game {
@@ -107,12 +114,6 @@ function TeamLogo({ team }: { team: Team }) {
   )
 }
 
-function pctText(team: TeamRow): string {
-  const played = team.wins + team.losses
-  if (played === 0) return "–"
-  return ((team.wins / played) * 1000).toFixed(0)
-}
-
 function LeagueCard({
   title,
   color,
@@ -149,15 +150,16 @@ function LeagueCard({
             <tr className="border-b border-white/10 font-sans text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <th className="w-10 px-3 py-3 text-left">#</th>
               <th className="px-3 py-3 text-left">Team</th>
-              <th className="px-3 py-3 text-center">W</th>
-              <th className="px-3 py-3 text-center">L</th>
-              <th className="px-3 py-3 text-center">PCT</th>
+              <th className="px-2 py-3 text-center" title="Games played">P</th>
+              <th className="px-2 py-3 text-center" title="Wins">W</th>
+              <th className="px-2 py-3 text-center" title="Losses">L</th>
+              <th className="px-3 py-3 text-center" title="Points">PTS</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/10">
             {teams.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-3 py-8 text-center text-sm text-muted-foreground">
+                <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground">
                   No teams in this league yet.
                 </td>
               </tr>
@@ -171,10 +173,11 @@ function LeagueCard({
                     <span className="truncate font-sans text-sm text-foreground">{team.name}</span>
                   </div>
                 </td>
-                <td className="px-3 py-3 text-center font-sans text-sm text-foreground">{team.wins}</td>
-                <td className="px-3 py-3 text-center font-sans text-sm text-foreground">{team.losses}</td>
-                <td className="px-3 py-3 text-center font-sans text-sm font-bold" style={{ color }}>
-                  {pctText(team)}
+                <td className="px-2 py-3 text-center font-sans text-sm text-foreground/80">{team.played}</td>
+                <td className="px-2 py-3 text-center font-sans text-sm text-foreground">{team.wins}</td>
+                <td className="px-2 py-3 text-center font-sans text-sm text-foreground">{team.losses}</td>
+                <td className="px-3 py-3 text-center font-sans text-base font-bold" style={{ color }}>
+                  {team.points}
                 </td>
               </tr>
             ))}
@@ -250,30 +253,40 @@ export default function StandingsPage() {
     )
   }
 
+  // Only finished games with both scores entered count towards the table
   const finalGames = games.filter((g) => g.season === currentSeason && g.status === "Final")
 
   const getTeamStats = (teamId: string) => {
-    const teamGames = finalGames.filter(
-      (g) => String(g.homeTeamId) === teamId || String(g.awayTeamId) === teamId
-    )
     let wins = 0
-    teamGames.forEach((g) => {
-      if (g.homeScore !== null && g.awayScore !== null) {
-        if (String(g.homeTeamId) === teamId && g.homeScore > g.awayScore) wins++
-        if (String(g.awayTeamId) === teamId && g.awayScore > g.homeScore) wins++
-      }
+    let losses = 0
+    let diff = 0
+
+    finalGames.forEach((g) => {
+      const isHome = String(g.homeTeamId) === teamId
+      const isAway = String(g.awayTeamId) === teamId
+      if (!isHome && !isAway) return
+      if (g.homeScore === null || g.awayScore === null) return
+
+      const own = isHome ? g.homeScore : g.awayScore
+      const opponent = isHome ? g.awayScore : g.homeScore
+      diff += own - opponent
+      if (own > opponent) wins++
+      else losses++
     })
-    return { wins, losses: teamGames.length - wins }
+
+    const played = wins + losses
+    // 1 point for playing, plus 1 more for a win
+    const points = played * POINTS_FOR_PLAYING + wins * POINTS_FOR_WIN
+    return { played, wins, losses, diff, points }
   }
 
-  const pctOf = (t: TeamRow) => {
-    const played = t.wins + t.losses
-    return played === 0 ? 0 : t.wins / played
-  }
-
+  // Order: points, then wins, then points scored minus conceded, then name
   const sorted: TeamRow[] = teams
     .map((t) => ({ ...t, ...getTeamStats(t.id) }))
-    .sort((a, b) => pctOf(b) - pctOf(a) || b.wins - a.wins || a.name.localeCompare(b.name))
+    .sort(
+      (a, b) =>
+        b.points - a.points || b.wins - a.wins || b.diff - a.diff || a.name.localeCompare(b.name)
+    )
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -303,7 +316,7 @@ export default function StandingsPage() {
               Standings
             </h1>
             <p className="mt-3 max-w-xs text-base text-foreground/80">
-              Current league title race standings and win percentages.
+              Current league title race standings and points.
             </p>
           </div>
         </section>
@@ -322,6 +335,11 @@ export default function StandingsPage() {
                 />
               ))}
             </div>
+
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              {POINTS_FOR_PLAYING} point for playing a game, plus {POINTS_FOR_WIN} more for a win. Ties on points
+              are split by wins, then by points scored minus points conceded.
+            </p>
           </div>
         </section>
       </main>
